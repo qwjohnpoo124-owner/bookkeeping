@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f6b44">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="離線可用的個人記帳 App">
 <meta name="mobile-web-app-capable" content="yes">
@@ -85,6 +86,9 @@
 <main id="view-settings" class="view" data-view="settings" hidden>
   <header class="hero compact"><h1>設定</h1></header>
   <section class="pad">
+    <div class="section-title"><h2>主題顏色</h2></div>
+    <div class="card pad-in"><div class="swatches" id="theme-list"></div></div>
+
     <div class="section-title"><h2>同步</h2></div>
     <div class="card pad-in stack">
       <label>Apps Script 網頁應用程式 URL<input id="api-url" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></label>
@@ -151,7 +155,7 @@
   <div class="seg" id="type-seg" role="group" aria-label="類型">
     <button data-type="expense" class="on">支出</button><button data-type="income">收入</button><button data-type="transfer">轉帳</button>
   </div>
-  <div class="amount-display"><select id="f-cur" aria-label="幣別"></select><b id="amt">0</b></div>
+  <div class="amount-display" role="button" tabindex="0" aria-label="輸入金額"><select id="f-cur" aria-label="幣別"></select><b id="amt">0</b></div>
   <p class="approx" id="approx" hidden></p>
   <div class="sheet-body">
     <div id="cat-grid" class="cat-grid"></div>
@@ -164,12 +168,13 @@
       <label class="wide">備註<input id="f-note" maxlength="100" placeholder="可留白" enterkeyhint="done" autocomplete="off"></label>
     </div>
   </div>
+  <div class="keypad-wrap"><button class="kp-hide" id="kp-hide" aria-label="收起數字鍵盤">完成　⌄</button>
   <div class="keypad" id="keypad">
     <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="÷" class="op">÷</button>
     <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="×" class="op">×</button>
     <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="−" class="op">−</button>
     <button data-k=".">.</button><button data-k="0">0</button><button data-k="back" aria-label="退格">⌫</button><button data-k="+" class="op">+</button>
-  </div>
+  </div></div>
   <div class="sheet-actions"><button class="danger" id="f-delete" hidden>刪除</button><button class="primary" id="f-save">儲存</button></div>
 </dialog>
 

@@ -291,14 +291,18 @@ const hasOp = () => new RegExp(`[${OPS}]`).test(E.expr);
 const rateNow = () => Number($('#f-rate').value) || 0;
 function renderAmount() {
   const op = hasOp(), val = evalExpr(E.expr);
-  $('#amt').textContent = op ? E.expr : E.expr ? (() => { const [i, d] = E.expr.split('.'); return Number(i).toLocaleString('zh-TW') + (d !== undefined ? '.' + d : ''); })() : '0';
+  const txt = op ? E.expr : E.expr ? (() => { const [i, d] = E.expr.split('.'); return Number(i).toLocaleString('zh-TW') + (d !== undefined ? '.' + d : ''); })() : '0';
+  $('#amt').textContent = txt; $('#amt').classList.toggle('ph', !E.expr);
+  $('#amt').style.fontSize = txt.length > 14 ? '1.5rem' : txt.length > 10 ? '2rem' : '';
   $('.amount-display').className = `amount-display ${E.type}`;
   const lines = [];
+  if (!E.expr && !sheet.classList.contains('kp-open')) lines.push('點一下金額開始輸入');
   if (op) lines.push(Number.isFinite(val) ? `＝ ${fmtNum(val)}` : '算式不正確');
   if (E.cur !== 'TWD' && val > 0 && rateNow() > 0) lines.push(`≈ ${money(Math.round(val * rateNow()))}`);
   $('#approx').hidden = !lines.length; $('#approx').textContent = lines.join('　');
   $('#f-save').textContent = op ? '＝' : E.old ? '儲存變更' : '儲存';
 }
+const setKp = on => { sheet.classList.toggle('kp-open', on); renderAmount(); if (on) requestAnimationFrame(() => $('.amount-display').scrollIntoView({ block: 'nearest' })); };
 function pressKey(k) {
   const seg = E.expr.split(new RegExp(`[${OPS}]`)).pop();
   if (k === 'back') E.expr = E.expr.slice(0, -1);
@@ -350,6 +354,7 @@ function openEntry(item, type) {
   $('#f-rate').value = item && item.rate ? item.rate : '';
   $('#sheet-title').textContent = item ? '編輯帳目' : '新增帳目';
   $('#f-delete').hidden = !item;
+  sheet.classList.remove('kp-open');
   renderSheetType(); renderCats(); setCurrency(item && item.currency ? item.currency : 'TWD', true);
   openDlg(sheet); $('.sheet-body').scrollTop = 0;
 }
@@ -360,6 +365,9 @@ $('#f-cur').onchange = e => { E.rateEdited = false; $('#f-rate').value = ''; set
 $('#f-rate').addEventListener('input', () => { E.rateEdited = true; renderAmount(); });
 $('#type-seg').addEventListener('click', e => { const b = e.target.closest('[data-type]'); if (!b) return; E.type = b.dataset.type; buzz(); renderSheetType(); });
 $('#cat-grid').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; E.cat = b.dataset.cat; buzz(); renderCats(); });
+$('.amount-display').addEventListener('click', e => { if (e.target.closest('select')) return; buzz(6); setKp(!sheet.classList.contains('kp-open')); });
+$('#kp-hide').onclick = () => setKp(false);
+$('.sheet-body').addEventListener('focusin', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) setKp(false); }); // 要打字時收起數字鍵盤，避免和系統鍵盤打架
 $('#keypad').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; buzz(6); pressKey(b.dataset.k); });
 document.addEventListener('keydown', e => { // 桌機鍵盤也能輸入
   if (!sheet.open || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
@@ -376,7 +384,7 @@ async function saveEntry() {
     E.expr = String(v); buzz(6); return renderAmount();
   }
   const val = evalExpr(E.expr), account = $('#f-account').value, to = $('#f-to').value, date = $('#f-date').value, foreign = E.cur !== 'TWD', rate = rateNow();
-  if (!(val > 0)) return reject('請輸入金額');
+  if (!(val > 0)) { setKp(true); return reject('請輸入金額'); }
   if (foreign && !(rate > 0)) return reject('請輸入匯率');
   if (E.type === 'transfer' ? account === to : !E.cat) return reject(E.type === 'transfer' ? '轉出與轉入帳戶不能相同' : '請選擇分類');
   if (!date) return reject('請選擇日期');
@@ -567,13 +575,19 @@ function bridge(url, payload) {
     const timer = setTimeout(() => done(null, Error('連線逾時，請確認 Apps Script URL、登入狀態與部署權限。')), 30000);
     f.hidden = true;
     function done(v, err) { clearTimeout(timer); window.removeEventListener('message', recv); f.remove(); err ? bad(err) : ok(v); }
+    let target = null;
+    const fromGoogle = o => { try { return /(^|\.)(google\.com|googleusercontent\.com)$/.test(new URL(o).hostname); } catch { return false; } };
     function recv(e) {
       const m = e.data || {};
-      if (e.source !== f.contentWindow || m.app !== 'line-ledger' || m.id !== id) return;
+      if (m.app !== 'line-ledger' || !fromGoogle(e.origin)) return;
+      if (m.ready) { // 橋接頁載入完成：用它自己的視窗回傳資料（Google 外框會擋住直接傳給 iframe）
+        if (target) return; target = e.source;
+        target.postMessage({ app: 'line-ledger', id, action: 'sync', entries: payload.entries, payload }, '*'); return;
+      }
+      if (m.id !== id || e.source !== target) return;
       done(m.payload, m.payload && m.payload.ok ? null : Error((m.payload && m.payload.error) || '同步失敗。'));
     }
     window.addEventListener('message', recv);
-    f.onload = () => f.contentWindow.postMessage({ app: 'line-ledger', id, action: 'sync', entries: payload.entries, payload }, '*');
     f.src = url; document.body.append(f);
   });
 }
@@ -601,8 +615,6 @@ async function applyRemote(r) {
 let syncing = false;
 function setBusy(b) {
   syncing = b; $('#sync-btn').classList.toggle('spin', b); $('#sync-now').disabled = b; $('#sync-now').textContent = b ? '同步中…' : '立即同步';
-  const p = $('#ptr'); p.classList.toggle('go', b); p.style.transition = '.2s';
-  p.style.opacity = b ? 1 : 0; p.style.transform = b ? 'translateY(0)' : 'translateY(-60px)';
 }
 async function doSync(silent) {
   if (syncing) return;
@@ -634,7 +646,10 @@ addEventListener('touchmove', e => {
 }, { passive: true });
 addEventListener('touchend', () => {
   if (!pull) return; const fire = pull.d > 90; pull = null;
-  if (fire) doSync(); else { ptr.style.transition = '.2s'; ptr.style.opacity = 0; ptr.style.transform = 'translateY(-60px)'; }
+  if (fire) {
+    ptr.style.transition = '.2s'; ptr.style.opacity = 1; ptr.style.transform = 'translateY(0)'; ptr.classList.add('go');
+    doSync().finally(() => { ptr.style.opacity = 0; ptr.style.transform = 'translateY(-60px)'; ptr.classList.remove('go'); });
+  } else { ptr.style.transition = '.2s'; ptr.style.opacity = 0; ptr.style.transform = 'translateY(-60px)'; }
 });
 
 /* ================= 備份 / 還原 ================= */
@@ -703,7 +718,22 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
   document.body.append(probe);
   const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
   if (inset < 20) document.documentElement.style.setProperty('--st-min', '47px');
+  // 部分 iOS 版本的可視高度比螢幕矮一截，底部導覽列會浮在半空；量到落差就把導覽列往下補齊
+  const fixGap = () => { const g = screen.height - innerHeight; document.documentElement.style.setProperty('--vgap', g > 10 && g < 100 && innerHeight > innerWidth ? `${g}px` : '0px'); };
+  fixGap(); addEventListener('resize', fixGap); addEventListener('orientationchange', () => setTimeout(fixGap, 300));
 })();
+
+/* ================= 主題色 ================= */
+const THEMES = [['green', '森林綠', '#147b4d'], ['blue', '海洋藍', '#2563eb'], ['purple', '薰衣草', '#7c4dff'], ['pink', '蜜桃粉', '#e0568a'], ['orange', '夕陽橘', '#e0701f'], ['slate', '石墨灰', '#475569']];
+function applyTheme(id) {
+  const t = THEMES.find(x => x[0] === id) || THEMES[0];
+  document.documentElement.dataset.theme = t[0];
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--hero2').trim() || t[2];
+  $$('#theme-list button').forEach(b => b.classList.toggle('on', b.dataset.theme === t[0]));
+}
+$('#theme-list').innerHTML = THEMES.map(([id, name, c]) => `<button data-theme="${id}" aria-label="${name}"><i style="background:${c}"></i><span>${name}</span></button>`).join('');
+$('#theme-list').addEventListener('click', e => { const b = e.target.closest('[data-theme]'); if (!b) return; store.set('theme', b.dataset.theme); buzz(); applyTheme(b.dataset.theme); });
+applyTheme(store.get('theme') || 'green');
 
 /* ================= 啟動 ================= */
 $('#ver').textContent = `v${VERSION}`;
