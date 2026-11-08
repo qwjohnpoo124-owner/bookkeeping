@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f6b44">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="離線可用的個人記帳 App">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="記帳">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+<title>小日子記帳</title>
+</head>
+<body>
+<div id="offline" class="offline" hidden>目前離線，帳目會先存在這支手機</div>
+
+<!-- ============ 總覽 ============ -->
+<main id="view-home" class="view" data-view="home">
+  <header class="hero">
+    <div class="hero-top">
+      <div><p class="eyebrow" id="home-date"></p><h1>我的帳本</h1></div>
+      <button class="round" id="sync-btn" aria-label="同步到 Google Sheet">
+        <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/></svg>
+        <i class="dot" id="sync-dot" hidden></i>
+      </button>
+    </div>
+    <div class="balance">
+      <span>本月結餘</span>
+      <strong id="balance">$0</strong>
+      <div class="split">
+        <small><i class="arrow up">↑</i>收入<b id="income">$0</b></small>
+        <small><i class="arrow down">↓</i>支出<b id="expense">$0</b></small>
+      </div>
+    </div>
+  </header>
+  <section class="pad">
+    <button id="remind" class="remind" hidden><span>🔔</span><div><b>今天還沒記帳</b><small>花 10 秒記下今天的收支吧</small></div><em>記一筆</em></button>
+    <div id="budget-card"></div>
+    <div class="section-title"><h2>帳戶</h2></div>
+    <div id="account-cards" class="account-cards"></div>
+    <div class="section-title"><h2>最近帳目</h2><button class="link" data-tab="list">全部</button></div>
+    <div id="recent" class="card list"></div>
+  </section>
+</main>
+
+<!-- ============ 明細 ============ -->
+<main id="view-list" class="view" data-view="list" hidden>
+  <header class="hero compact">
+    <h1>明細</h1>
+    <div class="month-nav"><button data-m="-1" aria-label="上個月"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b class="m-label"></b><button data-m="1" aria-label="下個月"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <div class="month-sum"><span>收入 <b id="l-income"></b></span><span>支出 <b id="l-expense"></b></span></div>
+  </header>
+  <section class="pad">
+    <div class="searchbar"><input id="search" type="search" placeholder="搜尋備註、分類、帳戶" enterkeyhint="search" autocomplete="off"></div>
+    <div class="chips" id="filters">
+      <button class="chip on" data-f="all">全部</button><button class="chip" data-f="expense">支出</button><button class="chip" data-f="income">收入</button><button class="chip" data-f="transfer">轉帳</button>
+    </div>
+    <div id="groups"></div>
+  </section>
+</main>
+
+<!-- ============ 統計 ============ -->
+<main id="view-stats" class="view" data-view="stats" hidden>
+  <header class="hero compact">
+    <h1>統計</h1>
+    <div class="month-nav"><button data-m="-1" aria-label="上個月"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b class="m-label"></b><button data-m="1" aria-label="下個月"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+  </header>
+  <section class="pad">
+    <div class="seg slim" id="stat-type"><button class="on" data-st="expense">支出</button><button data-st="income">收入</button></div>
+    <div class="card pad-in" id="donut-card"></div>
+    <div class="section-title"><h2>每日走勢</h2></div>
+    <div class="card pad-in" id="daily"></div>
+    <div class="section-title"><h2>分類排行</h2></div>
+    <div class="card list" id="rank"></div>
+  </section>
+</main>
+
+<!-- ============ 設定 ============ -->
+<main id="view-settings" class="view" data-view="settings" hidden>
+  <header class="hero compact"><h1>設定</h1></header>
+  <section class="pad">
+    <div class="section-title"><h2>同步</h2></div>
+    <div class="card pad-in stack">
+      <label>Apps Script 網頁應用程式 URL<input id="api-url" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></label>
+      <label class="switch-row"><span>自動同步</span><input type="checkbox" id="auto-sync" role="switch"></label>
+      <p class="hint" id="sync-info"></p>
+      <button class="primary" id="sync-now">立即同步</button>
+    </div>
+
+    <div class="section-title"><h2>月預算</h2></div>
+    <div class="card list" id="budget-list"></div>
+
+    <div class="section-title"><h2>固定帳目</h2></div>
+    <div class="card list" id="recurring-list"></div>
+    <p class="hint tight">在「新增帳目」裡把「重複」選成每週／每月／每年，就會建立固定帳目，到期自動入帳。</p>
+
+    <div class="section-title"><h2>提醒</h2></div>
+    <div class="card pad-in stack">
+      <label class="switch-row"><span>每日記帳提醒</span><input type="checkbox" id="remind-on" role="switch"></label>
+      <label id="remind-time-row" hidden>提醒時間<input type="time" id="remind-time" value="21:00"></label>
+      <p class="hint" id="remind-info"></p>
+    </div>
+
+    <div class="section-title"><h2>帳戶</h2><span class="hint">點選編輯，按住 ≡ 拖曳排序</span></div>
+    <div class="card list" id="account-list"></div>
+    <form id="account-form" class="inline-form"><input name="name" maxlength="20" placeholder="新增帳戶，例如：信用卡" required><button class="primary">新增</button></form>
+
+    <div class="section-title"><h2>分類</h2></div>
+    <div class="card list" id="category-list"></div>
+    <form id="category-form" class="inline-form"><input name="icon" maxlength="4" value="🏷️" aria-label="圖示" required><input name="name" maxlength="20" placeholder="新增分類，例如：醫療" required><button class="primary">新增</button></form>
+
+    <div class="section-title"><h2>資料</h2></div>
+    <div class="card list">
+      <button class="row-btn" id="export-json"><span>匯出完整備份（JSON）</span><em>›</em></button>
+      <button class="row-btn" id="export-csv"><span>匯出帳目（CSV，可用 Excel 開）</span><em>›</em></button>
+      <button class="row-btn" id="import-btn"><span>從備份還原</span><em>›</em></button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+
+    <div class="section-title"><h2>App</h2></div>
+    <div class="card list">
+      <button class="row-btn" id="install-btn" hidden><span>安裝到主畫面</span><em>›</em></button>
+      <p class="hint pad-in" id="ios-hint" hidden>在 Safari 點「分享」→「加入主畫面」，就能像 App 一樣全螢幕使用。</p>
+      <div class="row-btn static"><span>版本</span><em id="ver"></em></div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden><span id="toast-msg"></span><button id="toast-act" hidden></button></div>
+<div id="ptr" class="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/></svg></div>
+
+<!-- ============ 底部導覽 ============ -->
+<nav class="tabbar" aria-label="主選單">
+  <button class="tab on" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>總覽</span></button>
+  <button class="tab" data-tab="list"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>明細</span></button>
+  <button class="add" id="add-btn" aria-label="新增帳目"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 21V11M12 21V4M19 21v-7"/></svg><span>統計</span></button>
+  <button class="tab" data-tab="settings"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>設定</span></button>
+</nav>
+
+<!-- ============ 記帳面板 ============ -->
+<dialog id="entry-sheet" class="sheet" aria-labelledby="sheet-title">
+  <div class="grabber" aria-hidden="true"></div>
+  <header class="sheet-head"><h2 id="sheet-title">新增帳目</h2><button class="round flat" id="sheet-close" aria-label="關閉">×</button></header>
+  <div class="seg" id="type-seg" role="group" aria-label="類型">
+    <button data-type="expense" class="on">支出</button><button data-type="income">收入</button><button data-type="transfer">轉帳</button>
+  </div>
+  <div class="amount-display"><select id="f-cur" aria-label="幣別"></select><b id="amt">0</b></div>
+  <p class="approx" id="approx" hidden></p>
+  <div class="sheet-body">
+    <div id="cat-grid" class="cat-grid"></div>
+    <div class="fields">
+      <label id="rate-row" class="wide" hidden><span id="rate-label">匯率</span><input type="number" id="f-rate" step="any" min="0" inputmode="decimal"><small class="hint" id="rate-hint"></small></label>
+      <label>帳戶<select id="f-account"></select></label>
+      <label id="to-row" hidden>轉入帳戶<select id="f-to"></select></label>
+      <label>日期<input type="date" id="f-date"></label>
+      <label id="repeat-row">重複<select id="f-repeat"><option value="">不重複</option><option value="weekly">每週</option><option value="monthly">每月</option><option value="yearly">每年</option></select></label>
+      <label class="wide">備註<input id="f-note" maxlength="100" placeholder="可留白" enterkeyhint="done" autocomplete="off"></label>
+    </div>
+  </div>
+  <div class="keypad" id="keypad">
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="÷" class="op">÷</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="×" class="op">×</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="−" class="op">−</button>
+    <button data-k=".">.</button><button data-k="0">0</button><button data-k="back" aria-label="退格">⌫</button><button data-k="+" class="op">+</button>
+  </div>
+  <div class="sheet-actions"><button class="danger" id="f-delete" hidden>刪除</button><button class="primary" id="f-save">儲存</button></div>
+</dialog>
+
+<!-- ============ 通用編輯面板 ============ -->
+<dialog id="form-dlg" class="sheet mini" aria-labelledby="fd-title">
+  <div class="grabber" aria-hidden="true"></div>
+  <header class="sheet-head"><h2 id="fd-title"></h2><button class="round flat" data-close-dlg aria-label="關閉">×</button></header>
+  <form id="fd-form" class="stack pad-in"></form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

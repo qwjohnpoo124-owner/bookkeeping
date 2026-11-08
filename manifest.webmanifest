@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "小日子記帳",
+  "short_name": "記帳",
+  "description": "離線可用的個人記帳 App，可同步到 Google Sheet",
+  "lang": "zh-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f6b44",
+  "theme_color": "#0f6b44",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "記一筆支出", "short_name": "支出", "url": "./?add=expense", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "記一筆收入", "short_name": "收入", "url": "./?add=income", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
