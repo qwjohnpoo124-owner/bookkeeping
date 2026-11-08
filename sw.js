@@ -1,4 +1,4 @@
-const CACHE = 'ledger-pwa-v9';
+const CACHE = 'ledger-pwa-v10';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 // 安裝時預先快取；有舊版在運作時先等待，由頁面提示使用者按「更新」才切換（避免操作到一半被重新整理）
