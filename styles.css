@@ -15,8 +15,8 @@
   --hero1:#0f5a3a;--hero2:#09372a;--shadow:0 6px 20px #0006;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%;-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100%;background:var(--bg);overscroll-behavior-y:none;touch-action:manipulation;
+html{height:100%;-webkit-text-size-adjust:100%;background:var(--card)}
+body{margin:0;height:100%;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);overscroll-behavior-y:none;touch-action:manipulation;
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;line-height:1.4}
 input,select,button{font:inherit;color:inherit}
 input,select{user-select:text;-webkit-user-select:text}
@@ -28,7 +28,7 @@ h1,h2,p{margin:0}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
 /* ---------- 版面 ---------- */
-.view{max-width:640px;margin:auto;padding-bottom:calc(var(--tab-total) + 28px);animation:view-in .24s ease}
+.view{max-width:640px;margin:auto;padding-bottom:40px;animation:view-in .24s ease}
 @keyframes view-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .pad{padding:0 16px}
 .pad-in{padding:16px}
@@ -146,10 +146,10 @@ input[type=date]{min-width:0}
 .mini-del{background:var(--danger-bg);color:var(--danger);border-radius:9px;padding:6px 11px;font-size:.8rem;font-weight:700}
 
 /* ---------- 底部導覽 ---------- */
-.tabbar{position:fixed;z-index:10;left:0;right:0;bottom:0;top:auto;margin:0;width:auto;max-width:none;border:0;overflow:visible;color:var(--text);display:flex;justify-content:center;align-items:center;
+.tabbar{position:relative;z-index:10;flex:none;display:flex;justify-content:center;align-items:center;
   height:var(--tab-total);padding:0 max(8px,calc((100vw - 640px)/2)) env(safe-area-inset-bottom);
-  background:var(--card);border-top:1px solid var(--line);
-  box-shadow:0 200px 0 0 var(--card)} /* 下方補色，避免任何情況下導覽列下面露出一條底 */
+  background:var(--card);border-top:1px solid var(--line)}
+#scroller{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 .tab{flex:1;display:grid;justify-items:center;gap:2px;color:var(--muted);height:var(--tab-h);align-content:center;font-size:.68rem;font-weight:700;transition:color .15s}
 .tab.on{color:var(--primary)}
 .tab.on svg{transform:translateY(-1px) scale(1.08)}
@@ -277,5 +277,3 @@ dialog.sheet.mini[open]{display:block;overflow-y:auto;padding-bottom:env(safe-ar
 @media(min-width:700px){dialog.sheet{margin:auto;border-radius:26px}.tabbar{border-radius:0}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* iPhone 全螢幕模式：導覽列從頂端定位，避免 bottom:0 停在螢幕底部上方 */
-.ios-pwa .tabbar{top:calc(var(--full-h,100lvh) - var(--tab-total));bottom:auto}

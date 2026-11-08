@@ -258,7 +258,7 @@ function go(tab, quiet) {
   S.tab = tab; store.set('tab', tab);
   $$('.view').forEach(v => { v.hidden = v.dataset.view !== tab; });
   $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
-  window.scrollTo(0, 0); if (!quiet) buzz(4);
+  $('#scroller').scrollTop = 0; if (!quiet) buzz(4);
 }
 
 /* ================= 匯率（免費公開 API，離線時用上次快取） ================= */
@@ -638,7 +638,7 @@ $('#auto-sync').onchange = e => { store.set('autoSync', e.target.checked ? '1' :
 
 /* 下拉同步 */
 let pull = null; const ptr = $('#ptr');
-addEventListener('touchstart', e => { if (window.scrollY > 0 || $('dialog[open]') || syncing || e.touches.length !== 1) { pull = null; return; } pull = { x: e.touches[0].clientX, y: e.touches[0].clientY, d: 0 }; ptr.style.transition = 'none'; }, { passive: true });
+addEventListener('touchstart', e => { if ($('#scroller').scrollTop > 0 || $('dialog[open]') || syncing || e.touches.length !== 1) { pull = null; return; } pull = { x: e.touches[0].clientX, y: e.touches[0].clientY, d: 0 }; ptr.style.transition = 'none'; }, { passive: true });
 addEventListener('touchmove', e => {
   if (!pull) return; const dy = e.touches[0].clientY - pull.y, dx = e.touches[0].clientX - pull.x;
   if (dy <= 0 || Math.abs(dx) > dy) { pull.d = 0; return; }
@@ -709,21 +709,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (!hadController || reloading) return; reloading = true; location.reload(); });
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); // 避免瀏覽器在空間不足時清掉帳本
-
-/* iPhone 全螢幕模式：若系統回報的瀏海高度是 0（部分 iOS 版本的已知問題），用保底值避免標題被瀏海／狀態列蓋住 */
-(() => {
-  if (!(/iphone|ipad|ipod/i.test(navigator.userAgent) && standalone)) return;
-  const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;top:0;padding-top:env(safe-area-inset-top);visibility:hidden';
-  document.body.append(probe);
-  const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
-  if (inset < 20) document.documentElement.style.setProperty('--st-min', '47px');
-  // 底部導覽列改用「從頂端算起」的位置：這台 iPhone 的 bottom:0 會停在螢幕底部上方約 47pt，但 top 是準的
-  const root = document.documentElement; root.classList.add('ios-pwa');
-  const full = () => { if (innerHeight > innerWidth) root.style.setProperty('--full-h', `${Math.max(innerHeight, screen.height)}px`); };
-  full(); addEventListener('resize', full); addEventListener('pageshow', full); addEventListener('orientationchange', () => setTimeout(full, 300));
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { full(); setTimeout(full, 400); } });
-})();
 
 /* ================= 主題色 ================= */
 const THEMES = [['green', '森林綠', '#147b4d'], ['blue', '海洋藍', '#2563eb'], ['purple', '薰衣草', '#7c4dff'], ['pink', '蜜桃粉', '#e0568a'], ['orange', '夕陽橘', '#e0701f'], ['slate', '石墨灰', '#475569']];

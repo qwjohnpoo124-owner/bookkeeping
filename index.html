@@ -2,14 +2,14 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f6b44">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="離線可用的個人記帳 App">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="記帳">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,6 +21,7 @@
 <body>
 <div id="offline" class="offline" hidden>目前離線，帳目會先存在這支手機</div>
 
+<div id="scroller">
 <!-- ============ 總覽 ============ -->
 <main id="view-home" class="view" data-view="home">
   <header class="hero">
@@ -135,6 +136,7 @@
     </div>
   </section>
 </main>
+</div>
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden><span id="toast-msg"></span><button id="toast-act" hidden></button></div>
 <div id="ptr" class="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/></svg></div>
