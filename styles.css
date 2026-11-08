@@ -4,7 +4,7 @@
   --primary:#147b4d;--primary-ink:#fff;--soft:#e8f3ec;--soft-ink:#17643e;
   --income:#0b7a4b;--expense:#d14d4d;--transfer:#a07a22;--danger-bg:#fdeeee;--danger:#b94444;
   --hero1:#11764b;--hero2:#0b4f33;--shadow:0 6px 20px #12381214;
-  --tab-h:60px;--tab-total:calc(var(--tab-h) + env(safe-area-inset-bottom));
+  --tab-h:60px;--tab-pad:max(env(safe-area-inset-bottom),16px);--tab-total:calc(var(--tab-h) + var(--tab-pad));
   font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   color:var(--text);background:var(--bg);color-scheme:light dark;
 }
@@ -35,7 +35,7 @@ h1,h2,p{margin:0}
 .stack{display:grid;gap:12px}
 
 .hero{background:linear-gradient(150deg,var(--hero1),var(--hero2));color:#fff;
-  padding:calc(var(--st) + 14px) 18px 22px;border-radius:0 0 28px 28px;margin-bottom:18px;
+  padding:calc(var(--st) + 18px) 18px 22px;border-radius:26px;margin:8px 10px 18px;
   box-shadow:0 10px 30px color-mix(in srgb,var(--hero2) 25%,transparent)}
 .hero.compact{padding-bottom:16px}
 .hero.compact h1{margin-bottom:10px}
@@ -147,7 +147,7 @@ input[type=date]{min-width:0}
 
 /* ---------- 底部導覽 ---------- */
 .tabbar{position:relative;z-index:10;flex:none;display:flex;justify-content:center;align-items:center;
-  height:var(--tab-total);padding:0 max(8px,calc((100vw - 640px)/2)) env(safe-area-inset-bottom);
+  height:var(--tab-total);padding:0 max(8px,calc((100vw - 640px)/2)) var(--tab-pad);
   background:var(--card);border-top:1px solid var(--line)}
 #scroller{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 .tab{flex:1;display:grid;justify-items:center;gap:2px;color:var(--muted);height:var(--tab-h);align-content:center;font-size:.68rem;font-weight:700;transition:color .15s}
