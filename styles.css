@@ -146,7 +146,7 @@ input[type=date]{min-width:0}
 .mini-del{background:var(--danger-bg);color:var(--danger);border-radius:9px;padding:6px 11px;font-size:.8rem;font-weight:700}
 
 /* ---------- 底部導覽 ---------- */
-.tabbar{position:fixed;z-index:10;left:0;right:0;bottom:calc(var(--vgap,0px) * -1);display:flex;justify-content:center;align-items:center;
+.tabbar{position:fixed;z-index:10;left:0;right:0;bottom:0;top:auto;margin:0;width:auto;max-width:none;border:0;overflow:visible;color:var(--text);display:flex;justify-content:center;align-items:center;
   height:var(--tab-total);padding:0 max(8px,calc((100vw - 640px)/2)) env(safe-area-inset-bottom);
   background:var(--card);border-top:1px solid var(--line);
   box-shadow:0 200px 0 0 var(--card)} /* 下方補色，避免任何情況下導覽列下面露出一條底 */
@@ -159,7 +159,7 @@ input[type=date]{min-width:0}
 .add svg{width:28px;height:28px;stroke-width:2.6}
 
 /* ---------- Toast / 離線 / 下拉同步 ---------- */
-.toast{position:fixed;z-index:30;left:50%;bottom:calc(var(--tab-total) + 14px - var(--vgap,0px));transform:translateX(-50%);max-width:min(92vw,420px);
+.toast{position:fixed;z-index:30;left:50%;bottom:calc(var(--tab-total) + 14px);transform:translateX(-50%);max-width:min(92vw,420px);
   display:flex;align-items:center;gap:14px;background:#262626;color:#fff;padding:12px 16px;border-radius:14px;font-size:.88rem;box-shadow:0 10px 30px #0006;animation:toast-in .22s ease}
 .toast button{color:#7cf0b6;font-weight:800;white-space:nowrap}
 @keyframes toast-in{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}

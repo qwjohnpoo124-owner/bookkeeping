@@ -718,19 +718,13 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
   document.body.append(probe);
   const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
   if (inset < 20) document.documentElement.style.setProperty('--st-min', '47px');
-  // 部分 iOS 版本的可視高度比螢幕矮一截，底部導覽列會浮在半空；量到落差就把導覽列往下補齊
-  // 量「貼底(bottom:0)的元素」實際落在哪，而不是看 innerHeight（兩者在 iOS 可能不一致，用 innerHeight 會補過頭）
-  const edge = document.createElement('div');
-  edge.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:0;visibility:hidden;pointer-events:none';
-  document.body.append(edge);
-  const fixGap = () => {
-    const g = Math.round(screen.height - edge.getBoundingClientRect().bottom);
-    document.documentElement.style.setProperty('--vgap', g > 10 && g < 100 && innerHeight > innerWidth ? `${g}px` : '0px');
-  };
-  fixGap(); [300, 1000, 2500].forEach(t => setTimeout(fixGap, t));
-  addEventListener('resize', fixGap); addEventListener('pageshow', fixGap); addEventListener('focus', fixGap);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { fixGap(); setTimeout(fixGap, 400); } });
-  addEventListener('orientationchange', () => setTimeout(fixGap, 300));
+})();
+
+/* 底部導覽列放進「頂層」(top layer)：iOS 全螢幕模式下一般的 fixed 元素會比螢幕矮一截，頂層元素則會貼到真正的螢幕底部 */
+(() => {
+  const nav = document.querySelector('.tabbar');
+  if (!nav || !nav.showPopover) return;
+  try { nav.setAttribute('popover', 'manual'); nav.showPopover(); } catch {}
 })();
 
 /* ================= 主題色 ================= */
@@ -746,7 +740,7 @@ $('#theme-list').addEventListener('click', e => { const b = e.target.closest('[d
 applyTheme(store.get('theme') || 'green');
 
 /* ================= 啟動 ================= */
-$('#ver').textContent = `v${VERSION}`;
+$('#ver').textContent = `v${VERSION} · ${innerHeight}/${screen.height}`;
 seed().then(load).then(async () => {
   go(store.get('tab') || 'home', true);
   await runRecurring();
