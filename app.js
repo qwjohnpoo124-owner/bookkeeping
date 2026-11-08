@@ -718,13 +718,11 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
   document.body.append(probe);
   const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
   if (inset < 20) document.documentElement.style.setProperty('--st-min', '47px');
-})();
-
-/* 底部導覽列放進「頂層」(top layer)：iOS 全螢幕模式下一般的 fixed 元素會比螢幕矮一截，頂層元素則會貼到真正的螢幕底部 */
-(() => {
-  const nav = document.querySelector('.tabbar');
-  if (!nav || !nav.showPopover) return;
-  try { nav.setAttribute('popover', 'manual'); nav.showPopover(); } catch {}
+  // 底部導覽列改用「從頂端算起」的位置：這台 iPhone 的 bottom:0 會停在螢幕底部上方約 47pt，但 top 是準的
+  const root = document.documentElement; root.classList.add('ios-pwa');
+  const full = () => { if (innerHeight > innerWidth) root.style.setProperty('--full-h', `${Math.max(innerHeight, screen.height)}px`); };
+  full(); addEventListener('resize', full); addEventListener('pageshow', full); addEventListener('orientationchange', () => setTimeout(full, 300));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { full(); setTimeout(full, 400); } });
 })();
 
 /* ================= 主題色 ================= */
@@ -740,7 +738,13 @@ $('#theme-list').addEventListener('click', e => { const b = e.target.closest('[d
 applyTheme(store.get('theme') || 'green');
 
 /* ================= 啟動 ================= */
-$('#ver').textContent = `v${VERSION} · ${innerHeight}/${screen.height}`;
+const dbg = () => { // 除錯資訊：版本 · 視窗高/螢幕高 · 導覽列底邊位置 · 底部安全區 · visualViewport 高/偏移
+  const p = document.createElement('div'); p.style.cssText = 'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom);visibility:hidden'; document.body.append(p);
+  const env = parseFloat(getComputedStyle(p).paddingBottom) || 0, eb = Math.round(p.getBoundingClientRect().bottom); p.remove();
+  const nb = Math.round(document.querySelector('.tabbar').getBoundingClientRect().bottom), vv = window.visualViewport;
+  $('#ver').textContent = `v${VERSION} · ${innerHeight}/${screen.height} · nav${nb} fix${eb} env${env} vv${vv ? Math.round(vv.height) + '/' + Math.round(vv.offsetTop) : '-'}`;
+};
+dbg(); setTimeout(dbg, 1500); document.addEventListener('visibilitychange', () => setTimeout(dbg, 300)); $('#ver').onclick = dbg;
 seed().then(load).then(async () => {
   go(store.get('tab') || 'home', true);
   await runRecurring();

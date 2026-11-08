@@ -276,3 +276,6 @@ dialog.sheet.mini[open]{display:block;overflow-y:auto;padding-bottom:env(safe-ar
 @media(max-height:700px){.keypad button{height:42px}.amount-display b{font-size:2.1rem}}
 @media(min-width:700px){dialog.sheet{margin:auto;border-radius:26px}.tabbar{border-radius:0}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* iPhone 全螢幕模式：導覽列從頂端定位，避免 bottom:0 停在螢幕底部上方 */
+.ios-pwa .tabbar{top:calc(var(--full-h,100lvh) - var(--tab-total));bottom:auto}
